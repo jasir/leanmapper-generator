@@ -63,6 +63,7 @@ class SchemaGenerator
 
 					if ($relationship instanceof \LeanMapper\Relationship\HasMany) {
 						$relationshipTable = $schema->createTable($relationship->getRelationshipTable());
+
 						$relationshipTable->addColumn($relationship->getColumnReferencingSourceTable(), 'integer');
 						$relationshipTable->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
 
@@ -72,7 +73,6 @@ class SchemaGenerator
 							[$this->mapper->getPrimaryKey($relationship->getRelationshipTable())],
 							array('onDelete' => 'CASCADE')
 						);
-
 
 						$relationshipTable->addForeignKeyConstraint(
 							$relationship->getTargetTable(),
@@ -117,9 +117,9 @@ class SchemaGenerator
 				}
 			}
 
-			if ($property->containsEnumeration()) {
+			/*if ($property->containsEnumeration()) {
 				$type = 'enum';
-			}
+			}*/
 		} else {
 			// Objects
 			$class = new ReflectionClass($property->getType());
@@ -137,4 +137,4 @@ class SchemaGenerator
 		return $type;
 	}
 
-} 
+}
