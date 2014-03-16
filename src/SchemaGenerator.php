@@ -47,7 +47,7 @@ class SchemaGenerator
 						$table->setPrimaryKey([$property->getColumn()]);
 					}
 
-					if ($property->hasCustomFlag('unique')) {
+					if ($property->hasCustomFlag('unique') && !$property->hasCustomFlag('autoincrement')) {
 						$table->addUniqueIndex([$column->getName()]);
 					}
 
