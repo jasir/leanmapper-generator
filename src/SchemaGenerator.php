@@ -1,6 +1,8 @@
 <?php
+namespace jasir\LeanMapperGenerator;
 
 use LeanMapper\IMapper;
+use LeanMapper\Exception;
 
 class SchemaGenerator
 {
@@ -16,7 +18,7 @@ class SchemaGenerator
 
 	public function createSchema(array $entities)
 	{
-		$schema = new Doctrine\DBAL\Schema\Schema();
+		$schema = new \Doctrine\DBAL\Schema\Schema();
 
 		/** @var \LeanMapper\Entity $entity */
 		foreach ($entities as $entity)
@@ -36,24 +38,39 @@ class SchemaGenerator
 					$type = $this->getType($property);
 
 					if ($type === NULL) {
-						continue;
+						dump($property);
+						throw new \Exception('Unknown type');
 					}
 
 					/** @var \Doctrine\DBAL\Schema\Column $column */
 					$column = $table->addColumn($property->getColumn(), $type);
 
-					if ($property->hasCustomFlag('autoincrement')) {
-						$column->setAutoincrement(true);
+					if ($property->hasCustomFlag('primaryKey')) {
 						$table->setPrimaryKey([$property->getColumn()]);
+						if ($property->hasCustomFlag('unique')) {
+							throw new Exception\InvalidAnnotationException(
+								"Generating {$reflection->name}:{$property->getName()} - m:unique can not be used with m:pk "
+							);
+						}
 					}
 
-					if ($property->hasCustomFlag('unique') && !$property->hasCustomFlag('autoincrement')) {
+					if ($property->hasCustomFlag('autoincrement')) {
+						$column->setAutoincrement(true);
+					}
+
+					if ($property->hasCustomFlag('unique')) {
 						$table->addUniqueIndex([$column->getName()]);
 					}
 
+					if ($property->hasCustomFlag('index')) {
+						$table->addIndex([$column->getName()]);
+					}
+
+					/*
 					if ($property->containsEnumeration()) {
 						$column->getType()->setEnumeration($property->getEnumValues());
 					}
+					*/
 
 					if ($property->hasCustomFlag('size')) {
 						$column->setLength($property->getCustomFlagValue('size'));
@@ -84,7 +101,12 @@ class SchemaGenerator
 					} elseif ($relationship instanceof \LeanMapper\Relationship\HasOne) {
 						$column = $table->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
 						$cascade = $property->isNullable() ? 'SET NULL' : 'CASCADE';
-						$table->addForeignKeyConstraint($relationship->getTargetTable(), [$column->getName()], [$this->mapper->getPrimaryKey($relationship->getTargetTable())], array('onDelete' => $cascade));
+						$table->addForeignKeyConstraint(
+							$relationship->getTargetTable(),
+							[$column->getName()],
+							[$this->mapper->getPrimaryKey($relationship->getTargetTable())],
+							array('onDelete' => $cascade)
+						);
 					}
 				}
 
@@ -104,7 +126,7 @@ class SchemaGenerator
 	}
 
 
-	private function getType(LeanMapper\Reflection\Property $property)
+	private function getType(\LeanMapper\Reflection\Property $property)
 	{
 		$type = NULL;
 
@@ -120,12 +142,13 @@ class SchemaGenerator
 			/*if ($property->containsEnumeration()) {
 				$type = 'enum';
 			}*/
+
 		} else {
 			// Objects
-			$class = new ReflectionClass($property->getType());
+			$class = new \ReflectionClass($property->getType());
 			$class = $class->newInstance();
 
-			if ($class instanceof DateTime) {
+			if ($class instanceof \DateTime) {
 				if ($property->hasCustomFlag('format')) {
 					$type = $property->getCustomFlagValue('format');
 				} else {
