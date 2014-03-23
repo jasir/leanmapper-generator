@@ -20,11 +20,14 @@ class SchemaGenerator
 	{
 		$schema = new \Doctrine\DBAL\Schema\Schema();
 
-		/** @var \LeanMapper\Entity $entity */
+
 		foreach ($entities as $entity)
 		{
+
 			$reflection = $entity->getReflection($this->mapper);
 			$properties = $reflection->getEntityProperties();
+			$onEnd = array();
+
 
 			if (count($properties) === 0) {
 				continue;
@@ -32,8 +35,10 @@ class SchemaGenerator
 
 			$table = $schema->createTable($this->mapper->getTable(get_class($entity)));
 
+
 			foreach ($properties as $property)
 			{
+				/** @var \LeanMapper\Reflection\Property $property */
 				if (!$property->hasRelationship()) {
 					$type = $this->getType($property);
 
@@ -49,21 +54,13 @@ class SchemaGenerator
 						$table->setPrimaryKey([$property->getColumn()]);
 						if ($property->hasCustomFlag('unique')) {
 							throw new Exception\InvalidAnnotationException(
-								"Generating {$reflection->name}:{$property->getName()} - m:unique can not be used with m:pk "
+								"Entity {$reflection->name}:{$property->getName()} - m:unique can not be used together with m:pk."
 							);
 						}
 					}
 
 					if ($property->hasCustomFlag('autoincrement')) {
 						$column->setAutoincrement(true);
-					}
-
-					if ($property->hasCustomFlag('unique')) {
-						$table->addUniqueIndex([$column->getName()]);
-					}
-
-					if ($property->hasCustomFlag('index')) {
-						$table->addIndex([$column->getName()]);
 					}
 
 					/*
@@ -100,15 +97,33 @@ class SchemaGenerator
 
 					} elseif ($relationship instanceof \LeanMapper\Relationship\HasOne) {
 						$column = $table->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
-						$cascade = $property->isNullable() ? 'SET NULL' : 'CASCADE';
-						$table->addForeignKeyConstraint(
-							$relationship->getTargetTable(),
-							[$column->getName()],
-							[$this->mapper->getPrimaryKey($relationship->getTargetTable())],
-							array('onDelete' => $cascade)
-						);
+						if (!$property->hasCustomFlag('nofk')) {
+							$cascade = $property->isNullable() ? 'SET NULL' : 'CASCADE';
+							$table->addForeignKeyConstraint(
+								$relationship->getTargetTable(),
+								[$column->getName()],
+								[$this->mapper->getPrimaryKey($relationship->getTargetTable())],
+								array('onDelete' => $cascade)
+							);
+						}
+
 					}
 				}
+
+				if ($property->hasCustomFlag('unique')) {
+					$indexColumns = $this->parseColumns($property->getCustomFlagValue('unique'), array($column->getName()));
+					$onEnd[] = $this->createIndexClosure($table, $indexColumns, TRUE);
+				}
+
+				if ($property->hasCustomFlag('index')) {
+					$indexColumns = $this->parseColumns($property->getCustomFlagValue('index'), array($column->getName()));
+					$onEnd[] = $this->createIndexClosure($table, $indexColumns, FALSE);
+				}
+
+				if ($property->hasCustomFlag('comment')) {
+					$column->setComment($property->getCustomFlagValue('comment'));
+				}
+
 
 				if (isset($column)) {
 					if ($property->isNullable()) {
@@ -120,9 +135,33 @@ class SchemaGenerator
 					}
 				}
 			}
+			foreach ($onEnd as $cb) {
+				$cb();
+			}
 		}
 
+
 		return $schema;
+	}
+
+	private function createIndexClosure($table, $columns, $unique) {
+		return function() use ($table, $columns, $unique) {
+			if ($unique) {
+				$table->addUniqueIndex($columns);
+			} else {
+				$table->addIndex($columns);
+			}
+		};
+	}
+
+	private function parseColumns($flag, $columns) {
+		foreach (explode(',', $flag) as $c) {
+			$c = trim($c);
+			if (!empty($c)) {
+				$columns[] = $c;
+			}
+		}
+		return $columns;
 	}
 
 
