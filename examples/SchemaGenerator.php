@@ -1,3 +1,4 @@
+<?php
 $schemaGenerator = new SchemaGenerator(...);
 $platform = new Doctrine\DBAL\Platforms\MySqlPlatform();
 $schema = $schemaGenerator->createSchema(...);
