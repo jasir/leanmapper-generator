@@ -13,6 +13,6 @@
     },
     "require": {
         "tharos/LeanMapper": "2.1.*",
-        "doctrine/dbal": "2.*"
+        "doctrine/dbal": "dev-master"
     }
 }
