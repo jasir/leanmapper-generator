@@ -20,7 +20,7 @@ class SchemaGenerator
 	{
 		$schema = new \Doctrine\DBAL\Schema\Schema();
 
-
+		$createdTables = array();
 		foreach ($entities as $entity)
 		{
 
@@ -34,7 +34,6 @@ class SchemaGenerator
 			}
 
 			$table = $schema->createTable($this->mapper->getTable(get_class($entity)));
-
 
 			foreach ($properties as $property)
 			{
@@ -76,24 +75,28 @@ class SchemaGenerator
 					$relationship = $property->getRelationship();
 
 					if ($relationship instanceof \LeanMapper\Relationship\HasMany) {
-						$relationshipTable = $schema->createTable($relationship->getRelationshipTable());
+						$relationshipTableName = $relationship->getRelationshipTable();
+						if (!in_array($relationshipTableName, $createdTables)) {
+							$createdTables[] = $relationshipTableName;
+							$relationshipTable = $schema->createTable($relationship->getRelationshipTable());
 
-						$relationshipTable->addColumn($relationship->getColumnReferencingSourceTable(), 'integer');
-						$relationshipTable->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
+							$relationshipTable->addColumn($relationship->getColumnReferencingSourceTable(), 'integer');
+							$relationshipTable->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
 
-						$relationshipTable->addForeignKeyConstraint(
-							$table,
-							[$relationship->getColumnReferencingSourceTable()],
-							[$this->mapper->getPrimaryKey($relationship->getRelationshipTable())],
-							array('onDelete' => 'CASCADE')
-						);
+							$relationshipTable->addForeignKeyConstraint(
+								$table,
+								[$relationship->getColumnReferencingSourceTable()],
+								[$this->mapper->getPrimaryKey($relationship->getRelationshipTable())],
+								array('onDelete' => 'CASCADE')
+							);
 
-						$relationshipTable->addForeignKeyConstraint(
-							$relationship->getTargetTable(),
-							[$relationship->getColumnReferencingTargetTable()],
-							[$this->mapper->getPrimaryKey($relationship->getRelationshipTable())],
-							array('onDelete' => 'CASCADE')
-						);
+							$relationshipTable->addForeignKeyConstraint(
+								$relationship->getTargetTable(),
+								[$relationship->getColumnReferencingTargetTable()],
+								[$this->mapper->getPrimaryKey($relationship->getRelationshipTable())],
+								array('onDelete' => 'CASCADE')
+							);
+						}
 
 					} elseif ($relationship instanceof \LeanMapper\Relationship\HasOne) {
 						$column = $table->addColumn($relationship->getColumnReferencingTargetTable(), 'integer');
