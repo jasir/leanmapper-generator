@@ -176,7 +176,7 @@ class SchemaGenerator
 			$type = $property->getType();
 
 			if ($type == 'string') {
-				if (!$property->hasCustomFlag('size')) {
+				if (!$property->hasCustomFlag('size') || $property->getCustomFlagValue('size') >= 65536) {
 					$type = 'text';
 				}
 			}
