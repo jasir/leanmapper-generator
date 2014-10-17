@@ -38,7 +38,7 @@ class SchemaGenerator
 			foreach ($properties as $property)
 			{
 				/** @var \LeanMapper\Reflection\Property $property */
-				if (!$property->hasRelationship()) {
+				if (!$property->hasRelationship() && !$property->hasCustomFlag('baked')) {
 					$type = $this->getType($property);
 
 					if ($type === NULL) {
