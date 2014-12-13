@@ -10,13 +10,27 @@ class SchemaGenerator
 
     private $mapper;
 
+    private $defaultConfig = array(
+	'autoincrement' => 'auto',
+    );
+    
+    private $config = array();
+    
     public function __construct(IMapper $mapper)
     {
 	$this->mapper = $mapper;
-    }
-
-    public function createSchema(array $entities)
+    } 
+    
+    public function config(array $config)
     {
+	$this->config = $config;
+    }
+    
+    public function createSchema(array $entities, array $config = array())
+    {
+	
+	$config = $this->defaultConfig + $this->config + $config;
+	
 	$schema = new \Doctrine\DBAL\Schema\Schema();
 
 	$createdTables = array();
@@ -31,8 +45,11 @@ class SchemaGenerator
 		continue;
 	    }
 
-	    $table = $schema->createTable($this->mapper->getTable(get_class($entity)));
-
+	    $tableName = $this->mapper->getTable(get_class($entity));
+	    $table = $schema->createTable($tableName);
+	    $primaryKey = $this->mapper->getPrimaryKey($tableName);
+	    
+	    
 	    foreach ($properties as $property) {
 		/** @var \LeanMapper\Reflection\Property $property */
 		if (!$property->hasRelationship() && !$property->hasCustomFlag('baked')) {
@@ -46,12 +63,15 @@ class SchemaGenerator
 		    /** @var \Doctrine\DBAL\Schema\Column $column */
 		    $column = $table->addColumn($property->getColumn(), $type);
 
-		    if ($property->hasCustomFlag('primaryKey')) {
+		    if ($property->getName() == $primaryKey) {
 			$table->setPrimaryKey([$property->getColumn()]);
 			if ($property->hasCustomFlag('unique')) {
 			    throw new Exception\InvalidAnnotationException(
 			    "Entity {$reflection->name}:{$property->getName()} - m:unique can not be used together with m:pk."
 			    );
+			}
+			if($config['autoincrement'] == 'auto') {
+			    $column->setAutoincrement(true);
 			}
 		    }
 

@@ -17,7 +17,7 @@
     },
     "require": {
         "tharos/LeanMapper": "*",
-	"nette/utils": "*",
+	"nette/finder": "*",
 	"nette/reflection": "*",
         "doctrine/dbal": "2.4.2"
     }

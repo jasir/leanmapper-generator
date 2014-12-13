@@ -94,6 +94,7 @@ class CreateSchemaCommand extends Command
 	$config = $this->config;
 	
 	$generator = $container->getByType('LeanMapperGenerator\SchemaGenerator');
+	$generator->config($config);
 	$platform = new Doctrine\DBAL\Platforms\MySqlPlatform();
 	$schema = $generator->createSchema($entities);
 	
