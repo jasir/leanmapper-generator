@@ -13,9 +13,7 @@
 	}
     ],
     "autoload": {
-	"psr-0": {
-	    "LeanMapperGenerator": ""
-	}
+	"psr-4": {"LeanMapperGenerator\\": "LeanMapperGenerator"}
     },
     "require": {
         "tharos/LeanMapper": "*",
