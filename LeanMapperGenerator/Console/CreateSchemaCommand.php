@@ -1,6 +1,6 @@
 <?php
 
-namespace LeanMapper\Console;
+namespace LeanMapperGenerator\Console;
 
 use Symfony\Component\Console\Command\Command,
     Symfony\Component\Console\Input\InputInterface,
