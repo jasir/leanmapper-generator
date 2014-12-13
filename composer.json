@@ -1,18 +1,26 @@
 {
-    "name": "jasir/leanmapper-generator",
-    "description": "Database generator based for LeanMapper based on Doctrine DBAL Schemes",
+    "name": "frantisekmasa/leanmapper-generator",
+    "description": "Database generator for LeanMapper based on Doctrine DBAL Schemes",
     "license": "MIT",
     "authors": [
         {
             "name": "jasir",
             "email": "sirjarda2@gmail.com"
-        }
+        },
+	{
+	    "name": "František Maša",
+	    "email": "frantisekmasa1@gmail.com"
+	}
     ],
     "autoload": {
-        "classmap": ["src/"]
+	"psr-0": {
+	    "LeanMapperGenerator": ""
+	}
     },
     "require": {
         "tharos/LeanMapper": "*",
+	"nette/utils": "*",
+	"nette/reflection": "*",
         "doctrine/dbal": "2.4.2"
     }
 }
