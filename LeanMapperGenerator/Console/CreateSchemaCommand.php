@@ -15,7 +15,6 @@ class CreateSchemaCommand extends Command
     
     public function __construct(array $config, $name = NULL)
     {
-	
 	parent::__construct($name);
 	$this->config = $config;
     }
@@ -99,8 +98,8 @@ class CreateSchemaCommand extends Command
 	$platform = new MySqlPlatform;
 	$schema = $generator->createSchema($entities);
 	
-	if(file_exists($config->logFile)) {
-	    $fromSchema = unserialize(file_get_contents($config->logFile));
+	if(isset($config['logFile']) && file_exists($config['logFile'])) {
+	    $fromSchema = unserialize(file_get_contents($config['logFile']));
 	    $sqls = $schema->getMigrateFromSql($fromSchema, $platform);
 	} else {
 	    $sqls = $schema->toSql($platform);
@@ -117,13 +116,16 @@ class CreateSchemaCommand extends Command
 		$output->writeln($query);
 		$connection->query($query);
 	    }
-	    $output->write(count($sqls).'queries executed.\n'
-		    . $config->logFile.' updated.\n'
-		    . $config->sqlFile.' updated.');
+	    $output->writeln(count($sqls).'queries executed');
+	    if(isset($config['logFile'])) {
+		file_put_contents($config['logFile'], serialize($schema));
+		$output->writeln($config['logFile'].' updated');
+	    }
 	    
-	    
-	    file_put_contents($config->sqlFile, $sql);
-	    file_put_contents($config->logFile, serialize($schema));
+	    if(isset($config['sqlFile'])) {
+		file_put_contents($config['sqlFile'], $sql);
+		$output->writeln($config['sqlFile'].' updated');
+	    }
 	} else {
 	    $output->writeln('Nothing to change...');
 	}
