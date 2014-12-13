@@ -6,7 +6,8 @@ use Symfony\Component\Console\Command\Command,
     Symfony\Component\Console\Input\InputInterface,
     Symfony\Component\Console\Output\OutputInterface,
     Nette\Reflection\ClassType,
-    Nette\Utils\Finder;
+    Nette\Utils\Finder,
+    Doctrine\DBAL\Platforms\MySqlPlatform;
 
 class CreateSchemaCommand extends Command
 {
@@ -95,7 +96,7 @@ class CreateSchemaCommand extends Command
 	
 	$generator = $container->getByType('LeanMapperGenerator\SchemaGenerator');
 	$generator->config($config);
-	$platform = new Doctrine\DBAL\Platforms\MySqlPlatform();
+	$platform = new MySqlPlatform;
 	$schema = $generator->createSchema($entities);
 	
 	if(file_exists($config->logFile)) {
