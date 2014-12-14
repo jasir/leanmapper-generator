@@ -1,5 +1,5 @@
 {
-    "name": "frantisekmasa/leanmapper-generator",
+    "name": "fmasa/leanmapper-generator",
     "description": "Database generator for LeanMapper based on Doctrine DBAL Schemes",
     "license": "MIT",
     "authors": [
@@ -13,7 +13,7 @@
 	}
     ],
     "autoload": {
-	"psr-4": {"LeanMapperGenerator\\": "LeanMapperGenerator"}
+	"psr-4": {"LeanMapperGenerator\\": "src/LeanMapperGenerator"}
     },
     "require": {
         "tharos/LeanMapper": "*",
