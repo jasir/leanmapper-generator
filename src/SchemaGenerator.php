@@ -109,7 +109,9 @@ class SchemaGenerator
 								array('onDelete' => $cascade)
 							);
 						}
-
+					} else {
+						//belongsToOne,  belongsToMany relationShip
+						continue;
 					}
 				}
 
@@ -147,7 +149,10 @@ class SchemaGenerator
 		return $schema;
 	}
 
-	private function createIndexClosure($table, $columns, $unique) {
+	/* --- internal details --- */
+
+	private function createIndexClosure($table, $columns, $unique)
+	{
 		return function() use ($table, $columns, $unique) {
 			if ($unique) {
 				$table->addUniqueIndex($columns);
@@ -157,7 +162,9 @@ class SchemaGenerator
 		};
 	}
 
-	private function parseColumns($flag, $columns) {
+
+	private function parseColumns($flag, $columns)
+	{
 		foreach (explode(',', $flag) as $c) {
 			$c = trim($c);
 			if (!empty($c)) {
