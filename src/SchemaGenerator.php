@@ -135,6 +135,14 @@ class SchemaGenerator
 						$column->setNotnull(false);
 					}
 
+					if ($property->hasDefaultValue() && $property->hasCustomFlag('default')) {
+						throw new Exception\InvalidAnnotationException('m:default and default can not be used together.');
+					}
+
+					if ($property->hasCustomFlag('default')) {
+						$column->setDefault($property->getCustomFlagValue('default'));
+					}
+
 					if ($property->hasDefaultValue()) {
 						$column->setDefault($property->getDefaultValue());
 					}
