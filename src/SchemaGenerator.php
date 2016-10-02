@@ -1,8 +1,8 @@
 <?php
 namespace jasir\LeanMapperGenerator;
 
-use LeanMapper\IMapper;
 use LeanMapper\Exception;
+use LeanMapper\IMapper;
 
 class SchemaGenerator
 {
@@ -21,8 +21,7 @@ class SchemaGenerator
 		$schema = new \Doctrine\DBAL\Schema\Schema();
 
 		$createdTables = array();
-		foreach ($entities as $entity)
-		{
+		foreach ($entities as $entity) {
 
 			$reflection = $entity->getReflection($this->mapper);
 			$properties = $reflection->getEntityProperties();
@@ -35,9 +34,8 @@ class SchemaGenerator
 
 			$table = $schema->createTable($this->mapper->getTable(get_class($entity)));
 
-			foreach ($properties as $property)
-			{
-				/** @var \LeanMapper\Reflection\Property $property */
+			foreach ($properties as $property) {
+				/** @var Property $property */
 				if (!$property->hasRelationship()) {
 					$type = $this->getType($property);
 
@@ -140,7 +138,8 @@ class SchemaGenerator
 					}
 
 					if ($property->hasCustomFlag('default')) {
-						$column->setDefault($property->getCustomFlagValue('default'));
+						$defaultValue = $this->getDefaultValue($property);
+						$column->setDefault($defaultValue);
 					}
 
 					if ($property->hasDefaultValue()) {
@@ -157,11 +156,38 @@ class SchemaGenerator
 		return $schema;
 	}
 
+
+	/**
+	 * @param $property
+	 * @return mixed
+	 */
+	protected function getDefaultValue(\LeanMapper\Reflection\Property $property)
+	{
+		$default = $property->getCustomFlagValue('default');
+		if ($property->getType() === 'boolean') {
+
+			switch ($default) {
+				case 'true':
+				case 1:
+					$default = true;
+					break;
+				case 'false':
+				case 0:
+					$default = false;
+					break;
+				default:
+					throw new Exception('Bad default value for boolean type: ' . $default);
+			}
+		}
+		return $default;
+	}
+
+
 	/* --- internal details --- */
 
 	private function createIndexClosure($table, $columns, $unique)
 	{
-		return function() use ($table, $columns, $unique) {
+		return function () use ($table, $columns, $unique) {
 			if ($unique) {
 				$table->addUniqueIndex($columns);
 			} else {
