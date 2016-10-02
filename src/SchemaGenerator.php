@@ -3,6 +3,7 @@ namespace jasir\LeanMapperGenerator;
 
 use LeanMapper\Exception;
 use LeanMapper\IMapper;
+use LeanMapper\Reflection\Property;
 
 class SchemaGenerator
 {
@@ -138,12 +139,15 @@ class SchemaGenerator
 					}
 
 					if ($property->hasCustomFlag('default')) {
-						$defaultValue = $this->getDefaultValue($property);
-						$column->setDefault($defaultValue);
+						$column->setDefault(
+							$this->getDefaultValue($property, $property->getCustomFlagValue('default'))
+						);
 					}
 
 					if ($property->hasDefaultValue()) {
-						$column->setDefault($property->getDefaultValue());
+						$column->setDefault(
+							$this->getDefaultValue($property, $property->getDefaultValue())
+						);
 					}
 				}
 			}
@@ -161,9 +165,8 @@ class SchemaGenerator
 	 * @param $property
 	 * @return mixed
 	 */
-	protected function getDefaultValue(\LeanMapper\Reflection\Property $property)
+	protected function getDefaultValue(Property $property, $default)
 	{
-		$default = $property->getCustomFlagValue('default');
 		if ($property->getType() === 'boolean') {
 
 			switch ($default) {
