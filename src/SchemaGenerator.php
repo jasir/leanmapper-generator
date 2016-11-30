@@ -35,14 +35,18 @@ class SchemaGenerator
 
 			$table = $schema->createTable($this->mapper->getTable(get_class($entity)));
 
+			/** @var Property $property */
 			foreach ($properties as $property) {
-				/** @var Property $property */
+
+				if ($property->hasCustomFlag('baked')) {
+					continue;
+				}
+
 				if (!$property->hasRelationship()) {
 					$type = $this->getType($property);
 
 					if ($type === NULL) {
-						dump($property);
-						throw new \Exception('Unknown type');
+						throw new \Exception("Unknown type (NULL) in " . $reflection->getShortName() . '::' . $property->getName());
 					}
 
 					/** @var \Doctrine\DBAL\Schema\Column $column */
