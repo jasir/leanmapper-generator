@@ -49,8 +49,17 @@ class SchemaGenerator
 						throw new \Exception("Unknown type (NULL) in " . $reflection->getShortName() . '::' . $property->getName());
 					}
 
+					$options = [];
+					if ($type === 'float' && $property->hasCustomFlag('money')) {
+						$type = 'decimal';
+						$options = [
+							'precision' => 12,
+							'scale' => 4,
+						];
+					}
+
 					/** @var \Doctrine\DBAL\Schema\Column $column */
-					$column = $table->addColumn($property->getColumn(), $type);
+					$column = $table->addColumn($property->getColumn(), $type, $options);
 
 					if ($property->hasCustomFlag('primaryKey')) {
 						$table->setPrimaryKey([$property->getColumn()]);
