@@ -1,4 +1,5 @@
 <?php
+
 namespace jasir\LeanMapperGenerator;
 
 use LeanMapper\Exception;
@@ -45,18 +46,19 @@ class SchemaGenerator
 				if (!$property->hasRelationship()) {
 					$type = $this->getType($property);
 
-					if ($type === NULL) {
+					if ($type === null) {
 						throw new \Exception("Unknown type (NULL) in " . $reflection->getShortName() . '::' . $property->getName());
 					}
 
 					$options = [];
-					if ($type === 'float' && $property->hasCustomFlag('money')) {
+					if ($type === 'float' && ($property->hasCustomFlag('money')) || $property->hasCustomFlag('numeric')) {
 						$type = 'decimal';
 						$options = [
-							'precision' => 12,
-							'scale' => 4,
+							'precision' => 20,
+							'scale' => 10,
 						];
 					}
+
 
 					/** @var \Doctrine\DBAL\Schema\Column $column */
 					$column = $table->addColumn($property->getColumn(), $type, $options);
@@ -129,12 +131,12 @@ class SchemaGenerator
 
 				if ($property->hasCustomFlag('unique')) {
 					$indexColumns = $this->parseColumns($property->getCustomFlagValue('unique'), array($column->getName()));
-					$onEnd[] = $this->createIndexClosure($table, $indexColumns, TRUE);
+					$onEnd[] = $this->createIndexClosure($table, $indexColumns, true);
 				}
 
 				if ($property->hasCustomFlag('index')) {
 					$indexColumns = $this->parseColumns($property->getCustomFlagValue('index'), array($column->getName()));
-					$onEnd[] = $this->createIndexClosure($table, $indexColumns, FALSE);
+					$onEnd[] = $this->createIndexClosure($table, $indexColumns, false);
 				}
 
 				if ($property->hasCustomFlag('comment')) {
@@ -227,7 +229,7 @@ class SchemaGenerator
 
 	private function getType(\LeanMapper\Reflection\Property $property)
 	{
-		$type = NULL;
+		$type = null;
 
 		if ($property->isBasicType()) {
 			$type = $property->getType();
